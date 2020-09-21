@@ -2,16 +2,43 @@ void displayNotFound()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("data.txt");
+    lcd.print("Soubor data.txt");
     lcd.setCursor(0, 1);
-    lcd.print("not found");
+    lcd.print("nenalezen.");
+}
+
+void displayTooShort()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Soubor data.txt");
+    lcd.setCursor(0, 1);
+    lcd.print("je kratky.");
+}
+
+void displayInvalidLength()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Soubor data.txt");
+    lcd.setCursor(0, 1);
+    lcd.print("nelze delit 2.");
 }
 
 void displayRootFailed()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("open root");
+    lcd.print("Chyba");
     lcd.setCursor(0, 1);
-    lcd.print("failed");
+    lcd.print("pameti :(");
+}
+
+void displayTransferComplete()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Data");
+    lcd.setCursor(0, 1);
+    lcd.print("aktualizovana.");
 }

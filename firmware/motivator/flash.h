@@ -13,8 +13,6 @@ int32_t msc_read_cb(uint32_t lba, void *buffer, uint32_t bufsize)
 // return number of written bytes (must be multiple of block size)
 int32_t msc_write_cb(uint32_t lba, uint8_t *buffer, uint32_t bufsize)
 {
-    digitalWrite(LED_BUILTIN, HIGH);
-
     // Note: SPIFLash Bock API: readBlocks/writeBlocks/syncBlocks
     // already include 4K sector caching internally. We don't need to cache it, yahhhh!!
     return flash.writeBlocks(lba, buffer, bufsize / 512) ? bufsize : -1;
@@ -26,13 +24,11 @@ void msc_flush_cb(void)
 {
     // sync with flash
     flash.syncBlocks();
-
     // clear file system's cache to force refresh
     fatfs.cacheClear();
 
-
-
-    digitalWrite(LED_BUILTIN, LOW);
+    displayTransferComplete();
+    updateTotalLines();
 }
 
 void flashSetup()
@@ -55,6 +51,46 @@ void flashSetup()
     Serial.println(flash.getJEDECID(), HEX);
     Serial.print("Flash size: ");
     Serial.println(flash.size());
+}
 
+void flashWriteConfig()
+{
+    if (root.open("/"))
+    {
+        if (file.open(FILE_CONFIG, O_WRONLY | O_CREAT | O_TRUNC))
+        {
+            file.write(currentBrightness);
+            file.write(randomOrder ? 1 : 0);
+            file.write(currentDelay);
+            file.close();
+        }
+        root.close();
+    }
+    else
+    {
+        displayRootFailed();
+    }
+}
 
+void flashReadConfig()
+{
+    if (root.open("/"))
+    {
+        if (file.open(FILE_CONFIG, O_RDONLY))
+        {
+            char buff[3];
+            file.read(&buff, 3);
+            if (buff[0] < BRIGHTNESS_MODES)
+            {
+                currentBrightness = buff[0];
+            }
+            randomOrder = (buff[1] == 1);
+            if (buff[2] < DELAYS)
+            {
+                currentDelay = buff[2];
+            }
+            file.close();
+        }
+        root.close();
+    }
 }

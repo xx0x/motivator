@@ -21,6 +21,7 @@
 unsigned long printedLines = 0;
 byte forceUpdate = true;
 unsigned long lastTime = 0;
+unsigned long totalLines = 0;
 
 #include "buttons.h";
 #include "brightness.h";
@@ -44,6 +45,7 @@ bool randomOrder = false;
 
 // LCD
 Adafruit_LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_ENABLE, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7);
+#define LCD_WIDTH 16
 #define LCD_LINES 2
 #define ASCII_CR 13
 #define ASCII_LF 10
@@ -54,12 +56,59 @@ FatFileSystem fatfs;
 FatFile file;
 FatFile root;
 Adafruit_USBD_MSC usb_msc;
+#define FILE_DATA "data.txt"
+#define FILE_CONFIG "config"
 
-
-
-#include "flash.h";
 #include "display.h";
 
+void updateTotalLines()
+{
+    totalLines = 0;
+    if (root.open("/"))
+    {
+        if (file.open(FILE_DATA, O_RDONLY))
+        {
+            while (file.available())
+            {
+                char c;
+                file.read(&c, 1);
+                if (c == ASCII_CR)
+                {
+                    continue;
+                }
+                if (c == ASCII_LF)
+                {
+                    totalLines++;
+                }
+            }
+            totalLines++;
+            file.close();
+
+            if (totalLines < LCD_LINES)
+            {
+                displayTooShort();
+                totalLines = 0;
+            }
+
+            if (totalLines % LCD_LINES != 0)
+            {
+                displayInvalidLength();
+                totalLines = 0;
+            }
+        }
+        else
+        {
+            displayNotFound();
+        }
+        root.close();
+    }
+    else
+    {
+        displayRootFailed();
+    }
+}
+
+#include "flash.h";
 
 void nextDelay()
 {
@@ -73,11 +122,14 @@ void nextDelay()
 void setup()
 {
     pinMode(PIN_BRIGHTNESS, OUTPUT);
-    updateBrightness();
+    digitalWrite(PIN_BRIGHTNESS, 0);
     lcd.begin(16, 2);
     Serial.begin(115200);
     buttonsSetup();
     flashSetup();
+    updateTotalLines();
+    flashReadConfig();
+    updateBrightness();
     delay(500);
 }
 
@@ -107,18 +159,28 @@ void displayLoop()
         return;
     }
 
+    if (totalLines == 0)
+    {
+        return;
+    }
+
     forceUpdate = false;
     lastTime = millis();
-
     lcd.clear();
     if (root.open("/"))
     {
-        if (file.open("data.txt", O_RDONLY))
+        if (file.open(FILE_DATA, O_RDONLY))
         {
+            unsigned long randomLine;
+            if (randomOrder)
+            {
+                randomLine = (random(0, totalLines - 1) >> 1) * 2;
+            }
             byte lcdLine = 0;
             unsigned long fileLine = 0;
             bool printing = printedLines == 0;
             lcd.setCursor(0, 0);
+            byte curCharPos = 0;
             while (file.available())
             {
                 char c;
@@ -136,6 +198,7 @@ void displayLoop()
                         printedLines += LCD_LINES;
                         break;
                     }
+                    curCharPos = 0;
                     lcd.setCursor(0, lcdLine);
                     continue;
                 }
@@ -144,14 +207,22 @@ void displayLoop()
                     if (c == ASCII_LF)
                     {
                         fileLine++;
-                        if (fileLine >= printedLines)
+                        if (!randomOrder && fileLine >= printedLines)
+                        {
+                            printing = true;
+                        }
+                        if (randomOrder && fileLine >= randomLine)
                         {
                             printing = true;
                         }
                     }
                     continue;
                 }
-                lcd.write(c);
+                if (curCharPos < LCD_WIDTH)
+                {
+                    lcd.write(c);
+                    curCharPos++;
+                }
             }
 
             if (!file.available())
@@ -160,15 +231,7 @@ void displayLoop()
             }
             file.close();
         }
-        else
-        {
-            displayNotFound();
-        }
         root.close();
-    }
-    else
-    {
-        displayRootFailed();
     }
 }
 
@@ -191,6 +254,7 @@ void menuLoop()
         if (currentMenuItem >= MENU_ITEMS)
         {
             currentMenuItem = 0;
+            flashWriteConfig();
             switchMode(MODE_DISPLAY);
             return;
         }
