@@ -18,6 +18,8 @@
 #define PIN_MENU_BUTTON 14
 #define PIN_SET_BUTTON 15
 
+unsigned long printedLines = 0;
+byte forceUpdate = true;
 unsigned long lastTime = 0;
 
 #include "buttons.h";
@@ -53,11 +55,11 @@ FatFile file;
 FatFile root;
 Adafruit_USBD_MSC usb_msc;
 
+
+
 #include "flash.h";
 #include "display.h";
 
-unsigned long printedLines = 0;
-byte forceUpdate = true;
 
 void nextDelay()
 {

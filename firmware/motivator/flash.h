@@ -30,7 +30,7 @@ void msc_flush_cb(void)
     // clear file system's cache to force refresh
     fatfs.cacheClear();
 
-    changed = true;
+
 
     digitalWrite(LED_BUILTIN, LOW);
 }
@@ -56,5 +56,5 @@ void flashSetup()
     Serial.print("Flash size: ");
     Serial.println(flash.size());
 
-    changed = true; // to print contents initially
+
 }

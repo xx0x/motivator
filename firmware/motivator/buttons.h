@@ -11,7 +11,7 @@ void menuButtonCallback()
     if (millis() - lastTimeMenuButtonPressed > DEBOUNCE_TIME)
     {
         menuButtonPressed = true;
-        lastTime = 0;
+        forceUpdate = true;
         lastTimeMenuButtonPressed = millis();
     }
 }
@@ -21,7 +21,7 @@ void setButtonCallback()
     if (millis() - lastTimeSetButtonPressed > DEBOUNCE_TIME)
     {
         setButtonPressed = true;
-        lastTime = 0;
+        forceUpdate = true;
         lastTimeSetButtonPressed = millis();
     }
 }
