@@ -22,6 +22,7 @@ unsigned long printedLines = 0;
 byte forceUpdate = true;
 unsigned long lastTime = 0;
 unsigned long totalLines = 0;
+unsigned long prevRandomLine;
 
 #include "buttons.h";
 #include "brightness.h";
@@ -146,6 +147,7 @@ void loop()
     }
 }
 
+
 void displayLoop()
 {
     if (menuButtonPressed)
@@ -174,7 +176,16 @@ void displayLoop()
             unsigned long randomLine;
             if (randomOrder)
             {
-                randomLine = (random(0, totalLines - 1) >> 1) * 2;
+                for (byte i = 0; i < 10; i++)
+                {
+                    randomLine = (random(0, totalLines / 2)) * 2;
+                    if (randomLine != prevRandomLine)
+                    {
+                        break;
+                    }
+                }
+                prevRandomLine = randomLine;
+                // Serial.println(randomLine);
             }
             byte lcdLine = 0;
             unsigned long fileLine = 0;
@@ -207,18 +218,18 @@ void displayLoop()
                     if (c == ASCII_LF)
                     {
                         fileLine++;
-                        if (!randomOrder && fileLine >= printedLines)
-                        {
-                            printing = true;
-                        }
-                        if (randomOrder && fileLine >= randomLine)
-                        {
-                            printing = true;
-                        }
+                        continue;
                     }
-                    continue;
+                    if (!randomOrder && fileLine >= printedLines)
+                    {
+                        printing = true;
+                    }
+                    if (randomOrder && fileLine >= randomLine)
+                    {
+                        printing = true;
+                    }
                 }
-                if (curCharPos < LCD_WIDTH)
+                if (printing && curCharPos < LCD_WIDTH)
                 {
                     lcd.write(c);
                     curCharPos++;
