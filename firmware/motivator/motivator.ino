@@ -7,6 +7,8 @@
 #include "Adafruit_SPIFlash.h"
 #include "Adafruit_TinyUSB.h"
 
+#include "functions.h"
+
 // Pins
 #define PIN_LCD_RS 12
 #define PIN_LCD_ENABLE 11
@@ -132,6 +134,7 @@ void setup()
     flashReadConfig();
     updateBrightness();
     delay(500);
+    displayTest();
 }
 
 void loop()
