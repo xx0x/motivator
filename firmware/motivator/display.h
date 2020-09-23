@@ -64,6 +64,16 @@ byte dino1[] = {
     B01010};
 
 byte dino2[] = {
+    B00000,
+    B00110,
+    B00110,
+    B00100,
+    B10110,
+    B11111,
+    B00101,
+    B00101};
+
+byte dinoJump[] = {
     B00111,
     B00111,
     B00110,
@@ -83,7 +93,7 @@ byte dinoDied[] = {
     B01010,
     B10001};
 
-byte tree1[] = {
+byte tree[] = {
     B00000,
     B00100,
     B00100,
@@ -93,17 +103,7 @@ byte tree1[] = {
     B00100,
     B00100};
 
-byte tree2[] = {
-    B00000,
-    B00000,
-    B00100,
-    B00101,
-    B10101,
-    B10101,
-    B01110,
-    B00100};
-
-byte tree3[] = {
+byte rock[] = {
     B00000,
     B00000,
     B00000,
@@ -118,59 +118,69 @@ byte coin[] = {
     B00000,
     B00000,
     B01010,
-    B10101,
-    B10001,
-    B01010,
+    B11111,
+    B11111,
+    B01110,
     B00100};
 
 #define CHAR_CLEAR byte(0)
 #define CHAR_DINO1 byte(1)
 #define CHAR_DINO2 byte(2)
-#define CHAR_DINODIED byte(3)
-#define CHAR_TREE1 byte(4)
-#define CHAR_TREE2 byte(5)
-#define CHAR_TREE3 byte(6)
+#define CHAR_DINO_JUMP byte(3)
+#define CHAR_DINO_DIED byte(4)
+#define CHAR_TREE byte(5)
+#define CHAR_ROCK byte(6)
 #define CHAR_COIN byte(7)
 
 #define LCD_JUMP_LINE 0
 #define LCD_BASE_LINE 1
 #define LCD_DINO_COL 2
 
-unsigned long gameScore = 0;
+unsigned int gameScore = 0;
+bool dinoFrame = false;
 
 void displayDino(bool jump, bool died)
 {
     if (died)
     {
         lcd.setCursor(LCD_DINO_COL, LCD_BASE_LINE);
-        lcd.write(CHAR_DINODIED);
+        lcd.write(CHAR_DINO_DIED);
         return;
     }
     if (!jump)
     {
         lcd.setCursor(LCD_DINO_COL, LCD_BASE_LINE);
-        lcd.write(CHAR_DINO1);
+        lcd.write(dinoFrame ? CHAR_DINO1 : CHAR_DINO2);
     }
     else
     {
         lcd.setCursor(LCD_DINO_COL, LCD_JUMP_LINE);
-        lcd.write(CHAR_DINO2);
+        lcd.write(CHAR_DINO_JUMP);
     }
+    dinoFrame = !dinoFrame;
 }
 
 void displayScore()
 {
-    lcd.setCursor(LCD_WIDTH - numPlaces(gameScore) - 7, LCD_JUMP_LINE);
-    lcd.print("SCORE: ");
+    int cur = LCD_WIDTH - numPlaces(gameScore) - 7;
+    if (cur >= 0)
+    {
+        lcd.setCursor(cur, LCD_JUMP_LINE);
+        lcd.print("SCORE: ");
+    }
+    else
+    {
+        lcd.setCursor(0, LCD_JUMP_LINE);
+    }
     lcd.print(gameScore);
 }
 
 byte objects[LCD_WIDTH];
 
-#define OBJ_TREE1 1
-#define OBJ_TREE2 2
-#define OBJ_TREE3 3
-#define OBJ_COIN 4
+#define OBJ_COUNT 3
+#define OBJ_TREE 1
+#define OBJ_ROCK 2
+#define OBJ_COIN 3
 
 void gameStart()
 {
@@ -180,15 +190,19 @@ void gameStart()
     }
 }
 
+#define GAME_SPEEDS 5
+unsigned int gameSpeeds[GAME_SPEEDS] = {600, 400, 300, 220, 150};
+bool prevJumped = false;
+
 void displayTest()
 {
     lcd.createChar(0, clear);
     lcd.createChar(1, dino1);
     lcd.createChar(2, dino2);
-    lcd.createChar(3, dinoDied);
-    lcd.createChar(4, tree1);
-    lcd.createChar(5, tree2);
-    lcd.createChar(6, tree3);
+    lcd.createChar(3, dinoJump);
+    lcd.createChar(4, dinoDied);
+    lcd.createChar(5, tree);
+    lcd.createChar(6, rock);
     lcd.createChar(7, coin);
     gameStart();
     /*
@@ -207,7 +221,7 @@ void displayTest()
         objects[indexToWrite] = 0;
         if (!prevObject && random(10) > 6)
         {
-            objects[indexToWrite] = random(1, 5);
+            objects[indexToWrite] = random(1, OBJ_COUNT + 1);
             prevObject = true;
         }
         else
@@ -215,20 +229,21 @@ void displayTest()
             prevObject = false;
         }
 
-        lcd.clear();
+        lcd.setCursor(LCD_DINO_COL, LCD_BASE_LINE);
+        lcd.write(CHAR_CLEAR);
+        lcd.setCursor(LCD_DINO_COL, LCD_JUMP_LINE);
+        lcd.write(CHAR_CLEAR);
+
         lcd.setCursor(0, LCD_BASE_LINE);
         for (byte i = 0; i < LCD_WIDTH; i++)
         {
             switch (objects[(i + pos) % LCD_WIDTH])
             {
-            case OBJ_TREE1:
-                lcd.write(CHAR_TREE1);
+            case OBJ_TREE:
+                lcd.write(CHAR_TREE);
                 break;
-            case OBJ_TREE2:
-                lcd.write(CHAR_TREE2);
-                break;
-            case OBJ_TREE3:
-                lcd.write(CHAR_TREE3);
+            case OBJ_ROCK:
+                lcd.write(CHAR_ROCK);
                 break;
             case OBJ_COIN:
                 lcd.write(CHAR_COIN);
@@ -238,17 +253,27 @@ void displayTest()
             }
         }
         byte currObj = objects[(LCD_DINO_COL + pos) % LCD_WIDTH];
-        bool collision = currObj > 0 && currObj < 4;
-        bool dynoJumped = setButtonPressed;
+        bool collision = currObj > 0 && currObj < OBJ_COIN;
+        bool dynoJumped = setButtonPressed && !prevJumped;
+        prevJumped = dynoJumped;
         setButtonPressed = false;
         if (!dynoJumped && collision)
         {
-            lcd.setCursor(LCD_WIDTH - numPlaces(gameScore) - 11, LCD_JUMP_LINE);
-            lcd.print("GAME OVER: ");
+            int cur = LCD_WIDTH - numPlaces(gameScore) - 11;
+            if (cur >= 0)
+            {
+                lcd.setCursor(cur, LCD_JUMP_LINE);
+                lcd.print("GAME OVER: ");
+            }
+            else
+            {
+                lcd.setCursor(0, LCD_JUMP_LINE);
+            }
             lcd.print(gameScore);
             displayDino(false, true);
             gameScore = 0;
             delay(2000);
+            lcd.clear();
             gameStart();
         }
         else
@@ -271,7 +296,12 @@ void displayTest()
         {
             pos = 0;
         }
-        delay(400);
+        unsigned int gameSpeed = gameScore / 10;
+        if (gameSpeed > GAME_SPEEDS)
+        {
+            gameSpeed = GAME_SPEEDS - 1;
+        }
+        delay(gameSpeeds[gameSpeed]);
     }
 
     delay(10000);
