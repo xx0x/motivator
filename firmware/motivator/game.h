@@ -129,7 +129,7 @@ void gameLoop()
     gameObjects[indexToWrite] = 0;
     if (!prevGameWasObject && random(10) > 6)
     {
-        gameObjects[indexToWrite] = random(0, OBJECTS_COUNT);
+        gameObjects[indexToWrite] = OBJECTS_BASE + random(0, OBJECTS_COUNT);
         prevGameWasObject = true;
     }
     else
@@ -147,7 +147,7 @@ void gameLoop()
         byte object = gameObjects[(i + gameObjectsPos) % LCD_WIDTH];
         if (object > 0)
         {
-            lcd.write(OBJECTS_BASE + object);
+            lcd.write(object);
         }
         else
         {
@@ -155,11 +155,11 @@ void gameLoop()
         }
     }
     byte currObj = gameObjects[(LCD_DINO_COL + gameObjectsPos) % LCD_WIDTH];
-    bool collision = currObj > 0 && currObj < SPRITE_COIN - OBJECTS_BASE;
-    bool dynoJumped = setButtonPressed && !gamePrevJumped;
-    gamePrevJumped = dynoJumped;
+    bool collision = currObj > 0 && currObj < SPRITE_COIN;
+    bool dinoJumped = setButtonPressed && !gamePrevJumped;
+    gamePrevJumped = dinoJumped;
     setButtonPressed = false;
-    if (!dynoJumped && collision)
+    if (!dinoJumped && collision)
     {
         gameEnd();
     }
@@ -169,13 +169,13 @@ void gameLoop()
         {
             gameScore += 1;
         }
-        if (currObj == SPRITE_COIN - OBJECTS_BASE)
+        if (currObj == SPRITE_COIN && !dinoJumped)
         {
             gameScore += 3;
             gameObjects[(LCD_DINO_COL + gameObjectsPos) % LCD_WIDTH] = 0;
         }
         gameDisplayScore();
-        gameDisplayDino(dynoJumped, false);
+        gameDisplayDino(dinoJumped, false);
     }
     gameObjectsPos++;
     if (gameObjectsPos >= LCD_WIDTH)
