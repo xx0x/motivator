@@ -31,6 +31,7 @@ unsigned long prevRandomLine;
 
 #define MODE_DISPLAY 1
 #define MODE_MENU 2
+#define MODE_GAME 3
 
 byte mode = MODE_DISPLAY;
 byte currentMenuItem = 0;
@@ -40,11 +41,13 @@ unsigned long delays[DELAYS] = {2000, 4000, 6000, 10000, 20000, 60000, 3600000, 
 byte currentDelay = 2;
 bool randomOrder = false;
 #define CURRENT_DELAY delays[currentDelay]
+unsigned int gameHighScore = 0;
 
-#define MENU_ITEMS 3
+#define MENU_ITEMS 4
 #define MENU_ITEM_BRIGHTNESS 0
 #define MENU_ITEM_RANDOM 1
 #define MENU_ITEM_DELAY 2
+#define MENU_ITEM_GAME 3
 
 // LCD
 Adafruit_LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_ENABLE, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7);
@@ -112,6 +115,7 @@ void updateTotalLines()
 }
 
 #include "flash.h";
+#include "game.h";
 
 void nextDelay()
 {
@@ -134,7 +138,6 @@ void setup()
     flashReadConfig();
     updateBrightness();
     delay(500);
-    displayTest();
 }
 
 void loop()
@@ -147,9 +150,11 @@ void loop()
     case MODE_MENU:
         menuLoop();
         break;
+    case MODE_GAME:
+        gameLoop();
+        break;
     }
 }
-
 
 void displayLoop()
 {
@@ -188,7 +193,6 @@ void displayLoop()
                     }
                 }
                 prevRandomLine = randomLine;
-                // Serial.println(randomLine);
             }
             byte lcdLine = 0;
             unsigned long fileLine = 0;
@@ -289,20 +293,26 @@ void menuLoop()
         case MENU_ITEM_RANDOM:
             randomOrder = !randomOrder;
             break;
+        case MENU_ITEM_GAME:
+            switchMode(MODE_GAME);
+            return;
         }
     }
 
-    lcd.setCursor(0, 0);
-    lcd.print("MENU");
-    lcd.setCursor(0, 1);
     unsigned long s;
     switch (currentMenuItem)
     {
     case MENU_ITEM_BRIGHTNESS:
+        lcd.setCursor(0, 0);
+        lcd.print("MENU");
+        lcd.setCursor(0, 1);
         lcd.print("Jas: ");
         lcd.print(currentBrightness);
         break;
     case MENU_ITEM_DELAY:
+        lcd.setCursor(0, 0);
+        lcd.print("MENU");
+        lcd.setCursor(0, 1);
         lcd.print("Interval: ");
         s = delays[currentDelay] / 1000;
         if (s < 60)
@@ -323,6 +333,9 @@ void menuLoop()
 
         break;
     case MENU_ITEM_RANDOM:
+        lcd.setCursor(0, 0);
+        lcd.print("MENU");
+        lcd.setCursor(0, 1);
         lcd.print("Poradi: ");
         if (!randomOrder)
         {
@@ -332,6 +345,14 @@ void menuLoop()
         {
             lcd.print("Nahodne");
         }
+        break;
+
+    case MENU_ITEM_GAME:
+        lcd.setCursor(0, 0);
+        lcd.print("GAME");
+        lcd.setCursor(0, 1);
+        lcd.print("High Score: ");
+        lcd.print(gameHighScore);
         break;
     }
 }

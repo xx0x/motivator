@@ -1,3 +1,5 @@
+#define CONFIG_LENGTH 5
+
 // Callback invoked when received READ10 command.
 // Copy disk's data to buffer (up to bufsize) and
 // return number of copied bytes (must be multiple of block size)
@@ -62,6 +64,8 @@ void flashWriteConfig()
             file.write(currentBrightness);
             file.write(randomOrder ? 1 : 0);
             file.write(currentDelay);
+            file.write(gameHighScore >> 8 & 0xFF);
+            file.write(gameHighScore & 0xFF);
             file.close();
         }
         root.close();
@@ -78,8 +82,12 @@ void flashReadConfig()
     {
         if (file.open(FILE_CONFIG, O_RDONLY))
         {
-            char buff[3];
-            file.read(&buff, 3);
+            char buff[CONFIG_LENGTH];
+            for (byte i = 0; i < CONFIG_LENGTH; i++)
+            {
+                buff[i] = 0;
+            }
+            file.read(&buff, CONFIG_LENGTH);
             if (buff[0] < BRIGHTNESS_MODES)
             {
                 currentBrightness = buff[0];
@@ -89,6 +97,7 @@ void flashReadConfig()
             {
                 currentDelay = buff[2];
             }
+            gameHighScore = buff[3] << 8 | buff[4];
             file.close();
         }
         root.close();
