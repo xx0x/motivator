@@ -19,6 +19,7 @@
 #define PIN_BRIGHTNESS 13
 #define PIN_MENU_BUTTON 14
 #define PIN_SET_BUTTON 15
+#define PIN_RANDOM_SEED A4
 
 unsigned long printedLines = 0;
 byte forceUpdate = true;
@@ -128,6 +129,7 @@ void nextDelay()
 
 void setup()
 {
+    randomSeed(analogRead(PIN_RANDOM_SEED));
     pinMode(PIN_BRIGHTNESS, OUTPUT);
     digitalWrite(PIN_BRIGHTNESS, 0);
     lcd.begin(16, 2);
