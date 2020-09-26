@@ -25,7 +25,7 @@ unsigned long printedLines = 0;
 byte forceUpdate = true;
 unsigned long lastTime = 0;
 unsigned long totalLines = 0;
-unsigned long prevRandomLine;
+unsigned long prevRandomLine = 0;
 
 #include "buttons.h";
 #include "brightness.h";
@@ -183,7 +183,7 @@ void displayLoop()
     {
         if (file.open(FILE_DATA, O_RDONLY))
         {
-            unsigned long randomLine;
+            unsigned long randomLine = 0;
             if (randomOrder)
             {
                 for (byte i = 0; i < 10; i++)
@@ -198,7 +198,7 @@ void displayLoop()
             }
             byte lcdLine = 0;
             unsigned long fileLine = 0;
-            bool printing = printedLines == 0;
+            bool printing = printedLines == 0 && randomLine == 0;
             lcd.setCursor(0, 0);
             byte curCharPos = 0;
             while (file.available())
