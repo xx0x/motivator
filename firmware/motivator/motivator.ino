@@ -351,7 +351,7 @@ void menuLoop()
 
     case MENU_ITEM_GAME:
         lcd.setCursor(0, 0);
-        lcd.print("GAME");
+        lcd.print("DINO.EXE");
         lcd.setCursor(0, 1);
         lcd.print("High Score: ");
         lcd.print(gameHighScore);

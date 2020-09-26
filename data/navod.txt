@@ -1,0 +1,28 @@
+MOTIVÁTOR - NÁVOD K POUŽITÍ
+
+= Ovládání =
+ON
+Zapnutí / Vypnutí přístroje
+M - (MENU)
+Otevření menu / Další položka
+S - (SET)
+Další motivace / Změna hodnoty
+
+= Výdrž baterie / nabíjení =
+cca 40 hodin / USB-C
+
+= Nahrání textů =
+Zapnutý přístroj
+Připojení přes USB k PC
+Úprava souboru data.txt
+Text bez diakritiky
+Délka řádku 16 max znaků
+Počet řádků sudý
+
+= Více informací =
+motivator.pink
+xx0x.cz
+facebook.com/xx0x.cz
+instagram.com/xx0x.cz
+
+.
